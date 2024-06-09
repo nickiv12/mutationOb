@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<!-- ПРИМЕРЫ СОХРАНЕНИЯ РАЗЛИЧНЫХ ТИПОВ ДАННЫХ В localStorage -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>01. Mutation Observer.</title>  <!-- -->
+    <style>
+        .page-width { width: 800px; border: 1px solid grey; }
+        h3 {text-align: center;}
+        p {text-align: justify; padding: 3px;}
+        ol, ul {list-style-position: inside;}
+    </style>
+  </head>
+
+  <body class="page-width">
+    <h3> Пример. Использование MutationObserver.</h3>
+    <p>
+        В данном примере мы, с помощью API MutationObserver, отслеживаем добавление и удаление 
+        прямых потомков тега ol (узла DOM). Но, можно наблюдать за всеми дочерними элементами,
+        а не только за непосредственными потомками. Эта страница будет посвящена нескольким главным 
+        объектам этого API. Имена, которые указаны ниже это не ключевые слова, а имена переменных. Они создаются 
+        программистом и могут быть любыми разрешенными идентификаторами. Их значения - это ссылки на создаваемые
+        объекты, которые мы будем исследовать. Назначение и состав объектов зависят от того места
+        в котором они расположены в программе. Информацию будем получать на странице и в консоли.
+      </p>
+        <ul><b>Главные объекты:</b>
+          <li><b>observer</b> - экземляр конструктора MutationObserver.</li>
+          <li><b>bmutationsList</b> - это массив состоящий объектов, в каждом из которых 
+            записано одно конкретное изменение в  DOM.
+          </li>
+          <li><b>mutationRecord</b> - объект в которых хранятся изменения в DOM.</li>
+        </ul> 
+
+    <ul>На это странице:
+      <li>В списке будет создано 3 элемента списка в html-разметке (по умолчанию).</li>
+      <li>С помощью кнопок можно добавлять и удалять дочерние элементы списка.</li>
+      <li>Будем анализировать наши главные объекты API.</li>
+      <li>Изменения атрибутов и текстового содержимого дочерних элементов будем
+          смотреть в следующих примерах.</li>
+      <li>...</li>
+    </ul>
+    <h3>Здесь мы будут добавляться и удаляться элементы нумерованного списка</h3>
+    <ol id="workList"> <b>Нумерованный список.</b>
+      <li>Элемент в разметке по умолчанию.</li>
+      <li>Элемент в разметке по умолчанию.</li>
+      <li>Элемент в разметке по умолчанию.</li>
+    </ol>
+      <p><button onclick="addItem()">Добавить в конец списка</button></p>
+      <p><button onclick="delItem()">Удалить из конца списка</button></p>
+      <div>
+        <h4>Здесь видим кол-во элементов в списке</h4>
+        <span>В нумерованном списке </span><span id="info"></span><span> элементов.</span>
+      </div>
+  </body>
+
+  <script>
+    // --- 3. Убеждаемся, что проверки переменной на массив и объект работают правильно.
+    console.log(" ---- Убеждаемся, что умеем отличать массив от объекта. ---- ");
+    let mas = [1, 2, 3]; // Объявляем массив.
+    let obj = {name: 'John', age: 30};  // Объявляем объект.
+
+    // 3a. Проверка переменной на массив.
+    console.log("Это массив? mas instanceof Array:", mas instanceof Array); // true
+    console.log( "Это массив? obj instanceof Array:", obj instanceof Array);  // false
+
+    // 3b. Проверка: смотрим тип переменной.
+    console.log( "Так проверять не стоит: typeof mas:",  typeof mas); // Object, а это массив.
+    console.log( "Так проверять не стоит typeof obj:",  typeof obj); // Object
+    console.log( "Правильно: mas.constructor === Array:",  mas.constructor === Array); // true.
+    console.log( "Правильно: mas.constructor === Object:",  mas.constructor === Object); // false - не объект.
+    console.log( "Правильно: obj.constructor === Object:",  obj.constructor === Object); // true
+    // --- КОНЕЦ 3. 
+
+    // --- 2. MutationObserver ---------
+    // 2.1. Создаем с помощью конструктора, экземпляр конструктора, позволяющий
+    //       наблюдать за изменениями в DOM.
+    const observer = new MutationObserver((mutationsList) => {
+      
+      // Проверяем что mutations является массивом объектов.
+      console.log("--- mutationsList - массив объектов, аргумент для ф-ии обратного вызова.----");
+      console.log("mutationsList instanceof Array:", mutationsList instanceof Array) // true - массив.
+
+      for (const mutationRecord of mutationsList) {
+        console.log("typeof mutationRecord:", mutationRecord.constructor === Object); // объект.
+        console.log(mutationRecord); // Смотрим, что это объект.
+        
+        // Если атрибут type имеет значение "childlist"
+        if (mutationRecord.type === "childList") {
+          console.log(' Есть изменения кол-ва элементов в нумерованном списке.');
+        }
+      }
+    });  // Конец 2.1
+    
+    // Проверяем, что объект создан.
+    console.log(" Обозреватель observer создан:", observer);
+    
+    // 2.2. Объект создан, но ему надо указать за каким узлом следить и что отслеживать.
+    observer.observe(workList, {childList: true});
+    // 1-й аргумент метода - узел DOM за которым наблюдаем.
+    // 2-й аргумент метода - какие изменения наблюдаем: создание и удаление узлов.
+    // --- КОНЕЦ 2.
+
+
+    // --- 1. Обработчики кликов по кнопкам добавления удаления <li>. ----------
+    // 1.1. Функция добавляет элемент в конец списка.
+    function addItem() {
+      let newItem = document.createElement('li'); // Создаем новый элемент <li>.
+        newItem.textContent = " Добавлено скриптом."; // Пишем содержимое в элемент.
+        let workList = document.getElementById('workList');  // Получаем список
+        workList.appendChild(newItem); // Добавляем элемент в конец.
+    }
+
+      // 1.2. Функция удаляет последний элемент из конца списка.
+      function delItem() {
+        let workList = document.getElementById('workList');  // Получаем список
+        if (workList.children.length > 0) {
+          workList.removeChild(workList.lastElementChild);
+        }
+    }  // --- КОНЕЦ 1.
+  </script>
+
+  </html>
